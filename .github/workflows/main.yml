@@ -1,0 +1,30 @@
+name: Daily Random Image
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pick random image
+        run: |
+          files=(random_status/*)
+          if [ ${#files[@]} -eq 0 ]; then echo "No images found!"; exit 1; fi
+          cp "${files[RANDOM % ${#files[@]}]}" daily.jpg
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add daily.jpg
+          git commit -m "Daily random image update" || echo "No changes"
+          git push || echo "Nothing to push"
